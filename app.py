@@ -97,17 +97,17 @@ with tab1:
             storage_time_2 = 0
     
     # Blending percentages
-    st.subheader("Persentase Campuran")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        supplier_1_percentage = st.slider(f"Persentase {supplier_1}", 0, 100, 50, key="perc1")
-    
-    with col2:
-        supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 50, key="perc2")
-    
-    with col3:
-        biomass_percentage = st.slider("Persentase Biomass", 0, 100, 0, key="biomass")
+st.subheader("Persentase Campuran")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    supplier_1_percentage = st.slider(f"Persentase {supplier_1}", 0, 100, 50, step=10, key="perc1")
+
+with col2:
+    supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 50, step=10, key="perc2")
+
+with col3:
+    biomass_percentage = st.slider("Persentase Biomass", 0, 100, 0, step=10, key="biomass")
     
     # Check if percentages add up to 100
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
