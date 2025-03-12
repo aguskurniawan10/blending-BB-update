@@ -125,13 +125,10 @@ for label in ["GCV ARB UNLOADING", "TM ARB UNLOADING", "Ash Content ARB UNLOADIN
         val_2 = st.number_input(f"{label} Supplier 2", value=0.0)
     data_input.append((val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / max(supplier_1_percentage + supplier_2_percentage, 1))
 
-gcv_biomass = st.number_input("GCV Biomass", value=0.0)
-
 if st.button("Prediksi GCV"):
     prediction = best_model.predict([data_input])[0]
-    final_prediction = prediction
     if location_1 == "Coalyard":
-        final_prediction *= (1 - 0.05 * storage_time_1)
+        prediction *= (1 - 0.05 * storage_time_1)
     if location_2 == "Coalyard":
-        final_prediction *= (1 - 0.05 * storage_time_2)
-    st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
+        prediction *= (1 - 0.05 * storage_time_2)
+    st.success(f"Prediksi GCV (ARB) LAB: {prediction:.2f}")
