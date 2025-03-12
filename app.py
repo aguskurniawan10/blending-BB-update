@@ -81,15 +81,17 @@ if st.button("Prediksi GCV"):
     prediction = best_model.predict(data_input)[0]
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
     
+    # Tampilkan nilai untuk debugging
+    st.write(f"Prediksi Awal: {prediction}")
+    st.write(f"Persentase Total: {total_percentage}")
+
     # Hitung prediksi campuran
     if biomass_percentage > 0:
         final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / max(total_percentage, 1)
     else:
         final_prediction = prediction
     
-    # Tampilkan nilai untuk debugging
-    st.write(f"Prediksi Awal: {prediction}")
-    st.write(f"Persentase Total: {total_percentage}")
+    # Tampilkan prediksi campuran sebelum efek waktu penyimpanan
     st.write(f"Prediksi Campuran Sebelum Efek Waktu Penyimpanan: {final_prediction}")
 
     # Terapkan efek waktu penyimpanan
