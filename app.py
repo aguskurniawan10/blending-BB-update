@@ -89,9 +89,9 @@ if st.button("Prediksi GCV"):
     else:
         final_prediction = prediction
     
-    if location_1 == "Coalyard":
+    if location_1 == "Coalyard" and storage_time_1 > 0:
         final_prediction *= (1 - 0.05 * storage_time_1)
-    if location_2 == "Coalyard":
+    if location_2 == "Coalyard" and storage_time_2 > 0:
         final_prediction *= (1 - 0.05 * storage_time_2)
     
     st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
