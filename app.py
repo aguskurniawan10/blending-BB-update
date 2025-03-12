@@ -110,6 +110,10 @@ with col1:
     supplier_1 = st.selectbox("Pilih Supplier 1", supplier_options)
     supplier_1_percentage = st.slider("Persentase Supplier 1", 0, 100, 40)
     location_1 = st.radio("Lokasi Pengambilan Supplier 1", ["Tongkang", "Coalyard"], index=0)
+    gcv_arb_1 = st.number_input("GCV ARB UNLOADING Supplier 1", min_value=0.0, value=4400.0)
+    tm_arb_1 = st.number_input("TM ARB UNLOADING Supplier 1", min_value=0.0, value=35.0)
+    ash_content_1 = st.number_input("Ash Content ARB UNLOADING Supplier 1", min_value=0.0, value=5.0)
+    sulphur_1 = st.number_input("Total Sulphur ARB UNLOADING Supplier 1", min_value=0.0, value=0.3)
     if location_1 == "Coalyard":
         storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 1", min_value=0, max_value=12, value=0)
     else:
@@ -119,6 +123,10 @@ with col2:
     supplier_2 = st.selectbox("Pilih Supplier 2", supplier_options)
     supplier_2_percentage = st.slider("Persentase Supplier 2", 0, 100, 40)
     location_2 = st.radio("Lokasi Pengambilan Supplier 2", ["Tongkang", "Coalyard"], index=0)
+    gcv_arb_2 = st.number_input("GCV ARB UNLOADING Supplier 2", min_value=0.0, value=4400.0)
+    tm_arb_2 = st.number_input("TM ARB UNLOADING Supplier 2", min_value=0.0, value=35.0)
+    ash_content_2 = st.number_input("Ash Content ARB UNLOADING Supplier 2", min_value=0.0, value=4.0)
+    sulphur_2 = st.number_input("Total Sulphur ARB UNLOADING Supplier 2", min_value=0.0, value=0.2)
     if location_2 == "Coalyard":
         storage_time_2 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 2", min_value=0, max_value=12, value=0)
     else:
@@ -126,7 +134,5 @@ with col2:
 
 biomass_percentage = st.slider("Persentase Biomass", 0, 100, 20)
 
-def adjust_gcv_for_storage(gcv, storage_time):
-    return gcv * (1 - 0.05 * storage_time)
-
-...
+if st.button("Prediksi GCV"):
+    st.write("🔮 Hasil prediksi akan ditampilkan di sini!")
