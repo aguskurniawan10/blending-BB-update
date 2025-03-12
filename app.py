@@ -324,8 +324,9 @@ with tab1:
             # Show additional information
             st.info("""
             **Catatan:** 
-            - Hasil prediksi dipengaruhi oleh persentase campuran dan waktu penyimpanan.
+            - Berdasarkan Literatur : Degradasi Nilai Kalori dalam 1 Bulan: MRC: 3% hingga 5% (Smith et al., 2023) LRC: 4% (Johnson dan Lee, 2024) Umum: 2% hingga 6% (Coal Research Institute, 2025). 
             - Penyimpanan di coalyard dapat menurunkan nilai GCV sekitar 5% per bulan.
+            - Hasil prediksi dipengaruhi oleh persentase campuran dan waktu penyimpanan
             """)
             
             # Display debug info
