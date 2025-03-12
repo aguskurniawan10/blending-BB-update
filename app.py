@@ -65,7 +65,8 @@ data_input.insert(0, supplier_encoded_1)
 data_input.insert(1, supplier_encoded_2)
 
 gcv_biomass = st.number_input("GCV Biomass", value=0.0)
-data_input.append(gcv_biomass)
+if biomass_percentage > 0:
+    data_input.append(gcv_biomass)
 
 # Periksa jumlah fitur yang diharapkan oleh imputer dan model
 expected_features = imputer.n_features_in_
@@ -82,8 +83,11 @@ data_input = scaler.transform(data_input)
 if st.button("Prediksi GCV"):
     prediction = best_model.predict(data_input)[0]
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
-    final_prediction = prediction * (supplier_1_percentage + supplier_2_percentage) / max(total_percentage, 1)
-    final_prediction += (gcv_biomass * biomass_percentage) / max(total_percentage, 1)
+    
+    if biomass_percentage > 0:
+        final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / max(total_percentage, 1)
+    else:
+        final_prediction = prediction
     
     if location_1 == "Coalyard":
         final_prediction *= (1 - 0.05 * storage_time_1)
