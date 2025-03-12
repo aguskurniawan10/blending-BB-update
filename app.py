@@ -5,8 +5,6 @@ import os
 import pickle
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.linear_model import Ridge
-from sklearn.metrics import r2_score
 
 # Path untuk model dan preprocessing tools
 MODEL_PATH = "best_model.pkl"
@@ -89,13 +87,18 @@ if st.button("Prediksi GCV"):
     else:
         final_prediction = prediction
     
-    # Terapkan efek waktu penyimpanan dengan batasan
+    # Tampilkan nilai untuk debugging
+    st.write(f"Prediksi Awal: {prediction}")
+    st.write(f"Persentase Total: {total_percentage}")
+    st.write(f"Prediksi Campuran Sebelum Efek Waktu Penyimpanan: {final_prediction}")
+
+    # Terapkan efek waktu penyimpanan
     if location_1 == "Coalyard" and storage_time_1 > 0:
-        decay_factor_1 = min(1, 0.05 * (storage_time_1 / 30))  # Konversi hari ke bulan
+        decay_factor_1 = min(1, 0.05 * (storage_time_1 / 30))
         final_prediction *= (1 - decay_factor_1)
 
     if location_2 == "Coalyard" and storage_time_2 > 0:
-        decay_factor_2 = min(1, 0.05 * (storage_time_2 / 30))  # Konversi hari ke bulan
+        decay_factor_2 = min(1, 0.05 * (storage_time_2 / 30))
         final_prediction *= (1 - decay_factor_2)
 
     # Pastikan prediksi tidak negatif
