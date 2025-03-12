@@ -83,16 +83,22 @@ if st.button("Prediksi GCV"):
     prediction = best_model.predict(data_input)[0]
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
     
-    # Calculate the blended prediction
+    # Hitung prediksi campuran
     if biomass_percentage > 0:
         final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / max(total_percentage, 1)
     else:
         final_prediction = prediction
     
-    # Apply storage time effect
+    # Terapkan efek waktu penyimpanan dengan batasan
     if location_1 == "Coalyard" and storage_time_1 > 0:
-        final_prediction *= (1 - 0.05 * (storage_time_1 / 30))  # Convert days to months
+        decay_factor_1 = min(1, 0.05 * (storage_time_1 / 30))  # Konversi hari ke bulan
+        final_prediction *= (1 - decay_factor_1)
+
     if location_2 == "Coalyard" and storage_time_2 > 0:
-        final_prediction *= (1 - 0.05 * (storage_time_2 / 30))  # Convert days to months
-    
+        decay_factor_2 = min(1, 0.05 * (storage_time_2 / 30))  # Konversi hari ke bulan
+        final_prediction *= (1 - decay_factor_2)
+
+    # Pastikan prediksi tidak negatif
+    final_prediction = max(final_prediction, 0)
+
     st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
