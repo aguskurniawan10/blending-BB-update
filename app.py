@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -25,16 +19,29 @@ SCALER_PATH = "scaler.pkl"
 ENCODER_PATH = "label_encoder.pkl"
 BEST_MODEL_INFO_PATH = "best_model_info.pkl"
 
-with open(MODEL_PATH, "rb") as file:
-    best_model = pickle.load(file)
-with open(IMPUTER_PATH, "rb") as file:
-    imputer = pickle.load(file)
-with open(SCALER_PATH, "rb") as file:
-    scaler = pickle.load(file)
-with open(ENCODER_PATH, "rb") as file:
-    label_encoder = pickle.load(file)
-with open(BEST_MODEL_INFO_PATH, "rb") as file:
-    best_model_info = pickle.load(file)
+def train_and_save_model():
+    # Tambahkan logika pelatihan model di sini jika diperlukan
+    pass
+
+# Cek apakah model sudah ada, jika tidak maka latih ulang
+if not os.path.exists(MODEL_PATH):
+    st.warning("Model belum ditemukan! Melatih ulang model...")
+    train_and_save_model()
+
+if os.path.exists(MODEL_PATH):
+    with open(MODEL_PATH, "rb") as file:
+        best_model = pickle.load(file)
+    with open(IMPUTER_PATH, "rb") as file:
+        imputer = pickle.load(file)
+    with open(SCALER_PATH, "rb") as file:
+        scaler = pickle.load(file)
+    with open(ENCODER_PATH, "rb") as file:
+        label_encoder = pickle.load(file)
+    with open(BEST_MODEL_INFO_PATH, "rb") as file:
+        best_model_info = pickle.load(file)
+else:
+    st.error("Model tidak dapat dimuat! Pastikan file model tersedia.")
+    st.stop()
 
 st.set_page_config(page_title="Prediksi GCV", layout="wide")
 st.title("🔍 Prediksi GCV (ARB) LAB")
@@ -86,4 +93,3 @@ if st.button("Prediksi"):
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
     final_prediction = (prediction[0] * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / total_percentage
     st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
-
