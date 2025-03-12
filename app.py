@@ -125,8 +125,10 @@ for label in ["GCV ARB UNLOADING", "TM ARB UNLOADING", "Ash Content ARB UNLOADIN
         val_2 = st.number_input(f"{label} Supplier 2", value=0.0)
     data_input.append((val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / max(supplier_1_percentage + supplier_2_percentage, 1))
 
+data_input = np.array(data_input).reshape(1, -1)
+
 if st.button("Prediksi GCV"):
-    prediction = best_model.predict([data_input])[0]
+    prediction = best_model.predict(data_input)[0]
     if location_1 == "Coalyard":
         prediction *= (1 - 0.05 * storage_time_1)
     if location_2 == "Coalyard":
