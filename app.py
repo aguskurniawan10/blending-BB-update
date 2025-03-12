@@ -103,8 +103,9 @@ st.set_page_config(page_title="Prediksi GCV", layout="wide")
 st.title("🔍 Prediksi GCV (ARB) LAB")
 st.markdown(f"**🧠 Model Terbaik:** {best_model_info['name']} (R² = {best_model_info['r2']:.4f})")
 
-supplier_1 = st.selectbox("Pilih Supplier 1", ["ADARO MRC", "BGG"])
-supplier_2 = st.selectbox("Pilih Supplier 2", ["ADARO MRC", "BGG"])
+supplier_list = label_encoder.classes_.tolist()
+supplier_1 = st.selectbox("Pilih Supplier 1", supplier_list)
+supplier_2 = st.selectbox("Pilih Supplier 2", supplier_list)
 location_1 = st.selectbox("Lokasi Pengambilan Supplier 1", ["Tongkang", "Coalyard"])
 location_2 = st.selectbox("Lokasi Pengambilan Supplier 2", ["Tongkang", "Coalyard"])
 storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 1", min_value=0, max_value=12, value=0)
@@ -125,20 +126,12 @@ for label in ["GCV ARB UNLOADING", "TM ARB UNLOADING", "Ash Content ARB UNLOADIN
     data_input.append((val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / max(supplier_1_percentage + supplier_2_percentage, 1))
 
 gcv_biomass = st.number_input("GCV Biomass", value=0.0)
-supplier_encoded = label_encoder.transform([supplier_1])[0]
-data_input.insert(0, supplier_encoded)
-data_input = np.array([data_input])
-data_input = imputer.transform(data_input)
-data_input = scaler.transform(data_input)
 
 if st.button("Prediksi GCV"):
-    prediction = best_model.predict(data_input)
-    total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
-    final_prediction = (prediction[0] * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / total_percentage
-    
+    prediction = best_model.predict([data_input])[0]
+    final_prediction = prediction
     if location_1 == "Coalyard":
         final_prediction *= (1 - 0.05 * storage_time_1)
     if location_2 == "Coalyard":
         final_prediction *= (1 - 0.05 * storage_time_2)
-    
     st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
