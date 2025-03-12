@@ -63,11 +63,15 @@ supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
 data_input.insert(0, supplier_encoded_1)
 data_input.insert(1, supplier_encoded_2)
 
-# Pastikan data_input memiliki jumlah fitur yang sesuai
-st.write(f"Jumlah fitur yang dimasukkan: {len(data_input)}")
-st.write(f"Jumlah fitur yang diharapkan oleh imputer: {imputer.n_features_in_}")
+gcv_biomass = st.number_input("GCV Biomass", value=0.0)
+data_input.append(gcv_biomass)
 
-if len(data_input) != imputer.n_features_in_:
+# Pastikan data_input memiliki jumlah fitur yang sesuai
+expected_features = imputer.n_features_in_
+st.write(f"Jumlah fitur yang dimasukkan: {len(data_input)}")
+st.write(f"Jumlah fitur yang diharapkan oleh imputer: {expected_features}")
+
+if len(data_input) != expected_features:
     st.error("Jumlah fitur input tidak sesuai dengan model. Periksa kembali input Anda.")
     st.stop()
 
@@ -79,6 +83,7 @@ if st.button("Prediksi GCV"):
     prediction = best_model.predict(data_input)[0]
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
     final_prediction = prediction * (supplier_1_percentage + supplier_2_percentage) / max(total_percentage, 1)
+    final_prediction += (gcv_biomass * biomass_percentage) / max(total_percentage, 1)
     
     if location_1 == "Coalyard":
         final_prediction *= (1 - 0.05 * storage_time_1)
