@@ -62,6 +62,10 @@ scaler = models["scaler"]
 label_encoder = models["label_encoder"]
 best_model_info = models["best_model_info"]
 
+# Get expected features count
+expected_features = imputer.n_features_in_
+st.sidebar.info(f"Model expects {expected_features} features")
+
 # Display model info
 st.markdown(f"**🧠 Model Terbaik:** {best_model_info['name']} (R² = {best_model_info['r2']:.4f})")
 
@@ -163,44 +167,103 @@ with tab1:
     
     # Prepare data for prediction when button is clicked
     if st.button("Prediksi GCV"):
-        # Prepare blended input data
+        # Determine the model structure and adjust inputs accordingly
+        with tab2:
+            st.subheader("Model Structure Analysis")
+            st.write(f"Expected features count: {expected_features}")
+            
+            if hasattr(best_model, 'feature_names_in_'):
+                st.write("Feature names in model:")
+                st.write(best_model.feature_names_in_)
+        
+        # Prepare input data based on model expectations
         blended_data = []
         
-        # Add supplier encodings
-        supplier_encoded_1 = label_encoder.transform([supplier_1])[0]
-        supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
-        blended_data.append(supplier_encoded_1)
-        blended_data.append(supplier_encoded_2)
-        
-        # Calculate blended values for each parameter
-        for param in parameters:
-            val_1 = param_values[f"{param}_1"]
-            val_2 = param_values[f"{param}_2"]
+        # IMPORTANT: Adjust this section based on your actual model structure
+        # Here we're assuming the model expects only one supplier encoding + 4 parameters
+        if expected_features == 5:
+            # Use only the first supplier encoding
+            supplier_encoded = label_encoder.transform([supplier_1])[0]
+            blended_data.append(supplier_encoded)
             
-            # Calculate weighted average based on percentages
-            if total_percentage > 0:
-                blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / (supplier_1_percentage + supplier_2_percentage)
-            else:
-                blended_value = 0
+            # Calculate blended values for each parameter
+            for param in parameters:
+                val_1 = param_values[f"{param}_1"]
+                val_2 = param_values[f"{param}_2"]
                 
-            blended_data.append(blended_value)
+                # Calculate weighted average based on percentages
+                if (supplier_1_percentage + supplier_2_percentage) > 0:
+                    blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / (supplier_1_percentage + supplier_2_percentage)
+                else:
+                    blended_value = 0
+                    
+                blended_data.append(blended_value)
+        
+        elif expected_features == 6:
+            # Use both supplier encodings
+            supplier_encoded_1 = label_encoder.transform([supplier_1])[0]
+            supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
+            blended_data.append(supplier_encoded_1)
+            blended_data.append(supplier_encoded_2)
             
-        # Add biomass GCV if applicable
-        if biomass_percentage > 0 and "GCV Biomass" in expected_features:
-            blended_data.append(gcv_biomass)
+            # Calculate blended values for each parameter
+            for param in parameters:
+                val_1 = param_values[f"{param}_1"]
+                val_2 = param_values[f"{param}_2"]
+                
+                # Calculate weighted average based on percentages
+                if (supplier_1_percentage + supplier_2_percentage) > 0:
+                    blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / (supplier_1_percentage + supplier_2_percentage)
+                else:
+                    blended_value = 0
+                    
+                blended_data.append(blended_value)
+        
+        else:
+            # For other cases, try to adapt based on expected_features count
+            # This is a simplified approach - you may need to adjust for your specific model
+            supplier_encoded = label_encoder.transform([supplier_1])[0]
+            blended_data.append(supplier_encoded)
             
-        # Check if the input data matches the expected number of features
-        expected_features = imputer.n_features_in_
+            # Add just enough parameters to match expected_features
+            params_to_use = min(len(parameters), expected_features - 1)
+            for i in range(params_to_use):
+                param = parameters[i]
+                val_1 = param_values[f"{param}_1"]
+                val_2 = param_values[f"{param}_2"]
+                
+                if (supplier_1_percentage + supplier_2_percentage) > 0:
+                    blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / (supplier_1_percentage + supplier_2_percentage)
+                else:
+                    blended_value = 0
+                    
+                blended_data.append(blended_value)
+            
+        # Final check of feature count
         if len(blended_data) != expected_features:
             st.error(f"Jumlah fitur input ({len(blended_data)}) tidak sesuai dengan yang diharapkan model ({expected_features}). Periksa kembali input Anda.")
-            st.stop()
+            
+            with tab2:
+                st.subheader("Input Data (Tidak Sesuai)")
+                st.write(pd.DataFrame([blended_data], columns=[f"Feature {i}" for i in range(len(blended_data))]))
+                st.write("Penyesuaian diperlukan untuk menyesuaikan jumlah fitur dengan model")
+            
+            # Try to fix by truncating or padding
+            if len(blended_data) > expected_features:
+                blended_data = blended_data[:expected_features]
+                st.warning(f"Input data dipotong untuk menyesuaikan dengan model ({expected_features} fitur)")
+            else:
+                # Pad with zeros
+                while len(blended_data) < expected_features:
+                    blended_data.append(0)
+                st.warning(f"Input data ditambah dengan nilai 0 untuk menyesuaikan dengan model ({expected_features} fitur)")
         
         # Reshape, impute missing values, and scale the data
         input_array = np.array(blended_data).reshape(1, -1)
         
         # Process data - debugging info in the second tab
         with tab2:
-            st.subheader("Input Data Mentah")
+            st.subheader("Input Data Mentah (Final)")
             st.write(pd.DataFrame([blended_data], columns=[f"Feature {i}" for i in range(len(blended_data))]))
         
         # Apply imputation
@@ -233,7 +296,7 @@ with tab1:
             # Perform sanity check on the prediction
             if prediction < 0 or prediction > 10000:
                 st.error(f"Model mengembalikan nilai prediksi tidak valid: {prediction}")
-                prediction = max(0, min(prediction, 5500))  # Constrain to reasonable range
+                prediction = max(2000, min(prediction, 5500))  # Constrain to reasonable range
                 st.warning(f"Nilai diperbaiki ke dalam rentang yang valid: {prediction}")
             
             # Apply biomass blending if applicable
