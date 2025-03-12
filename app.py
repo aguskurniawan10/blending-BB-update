@@ -19,9 +19,65 @@ SCALER_PATH = "scaler.pkl"
 ENCODER_PATH = "label_encoder.pkl"
 BEST_MODEL_INFO_PATH = "best_model_info.pkl"
 
+# Fungsi untuk melatih dan menyimpan model
 def train_and_save_model():
-    # Tambahkan logika pelatihan model di sini jika diperlukan
-    pass
+    df = pd.read_excel("https://github.com/aguskurniawan10/prediksiNKLabUBPJPR/raw/main/DATA%20PREDIKSI%20NK%20LAB%202025.xlsx")
+    df.columns = df.columns.str.strip()
+
+    required_columns = ['Suppliers', 'GCV ARB UNLOADING', 'TM ARB UNLOADING', 
+                        'Ash Content ARB UNLOADING', 'Total Sulphur ARB UNLOADING', 'GCV (ARB) LAB']
+    for col in required_columns:
+        if col not in df.columns:
+            raise ValueError(f"Kolom '{col}' tidak ditemukan dalam dataset!")
+
+    label_encoder = LabelEncoder()
+    df['Suppliers'] = label_encoder.fit_transform(df['Suppliers'])
+
+    X = df[['Suppliers', 'GCV ARB UNLOADING', 'TM ARB UNLOADING', 
+            'Ash Content ARB UNLOADING', 'Total Sulphur ARB UNLOADING']]
+    y = df['GCV (ARB) LAB']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    imputer = SimpleImputer(strategy='median')
+    X_train_imputed = imputer.fit_transform(X_train)
+    X_test_imputed = imputer.transform(X_test)
+
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train_imputed)
+    X_test_scaled = scaler.transform(X_test_imputed)
+
+    models = {
+        'Linear Regression': LinearRegression(),
+        'Ridge Regression': Ridge(alpha=1.0),
+        'Lasso Regression': Lasso(alpha=1.0),
+        'Decision Tree': DecisionTreeRegressor(random_state=42),
+        'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42),
+        'Support Vector Regression': SVR(kernel='rbf')
+    }
+
+    best_model = None
+    best_score = float('-inf')
+    best_model_name = ""
+    
+    for name, model in models.items():
+        model.fit(X_train_scaled, y_train)
+        y_pred = model.predict(X_test_scaled)
+        r2 = r2_score(y_test, y_pred)
+        if r2 > best_score:
+            best_score = r2
+            best_model = model
+            best_model_name = name
+
+    with open(MODEL_PATH, "wb") as file:
+        pickle.dump(best_model, file)
+    with open(IMPUTER_PATH, "wb") as file:
+        pickle.dump(imputer, file)
+    with open(SCALER_PATH, "wb") as file:
+        pickle.dump(scaler, file)
+    with open(ENCODER_PATH, "wb") as file:
+        pickle.dump(label_encoder, file)
+    with open(BEST_MODEL_INFO_PATH, "wb") as file:
+        pickle.dump({"name": best_model_name, "r2": best_score}, file)
 
 # Cek apakah model sudah ada, jika tidak maka latih ulang
 if not os.path.exists(MODEL_PATH):
@@ -64,32 +120,4 @@ with col2:
 
 biomass_percentage = st.slider("Persentase Biomass", 0, 100, 20)
 
-data_input = []
-st.subheader("Masukkan Nilai Parameter untuk Masing-Masing Sumber")
-for label in ["GCV ARB UNLOADING", "TM ARB UNLOADING", "Ash Content ARB UNLOADING", "Total Sulphur ARB UNLOADING"]:
-    col1, col2 = st.columns(2)
-    with col1:
-        val_1 = st.number_input(f"{label} Supplier 1", value=0.0)
-    with col2:
-        val_2 = st.number_input(f"{label} Supplier 2", value=0.0)
-    
-    if location_1 == "Coalyard":
-        val_1 *= (1 - 0.05 * storage_time_1)
-    if location_2 == "Coalyard":
-        val_2 *= (1 - 0.05 * storage_time_2)
-    
-    weighted_avg = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / max(supplier_1_percentage + supplier_2_percentage, 1)
-    data_input.append(weighted_avg)
-
-gcv_biomass = st.number_input("GCV Biomass", value=0.0)
-supplier_encoded = label_encoder.transform([supplier_1])[0]
-data_input.insert(0, supplier_encoded)
-data_input = np.array([data_input])
-data_input = imputer.transform(data_input)
-data_input = scaler.transform(data_input)
-
-if st.button("Prediksi"):
-    prediction = best_model.predict(data_input)
-    total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
-    final_prediction = (prediction[0] * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / total_percentage
-    st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
+...
