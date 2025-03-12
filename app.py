@@ -110,13 +110,19 @@ with col1:
     supplier_1 = st.selectbox("Pilih Supplier 1", supplier_options)
     supplier_1_percentage = st.slider("Persentase Supplier 1", 0, 100, 40)
     location_1 = st.radio("Lokasi Pengambilan Supplier 1", ["Tongkang", "Coalyard"], index=0)
-    storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (bulan)", min_value=0, max_value=12, value=0) if location_1 == "Coalyard" else 0
+    if location_1 == "Coalyard":
+        storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 1", min_value=0, max_value=12, value=0)
+    else:
+        storage_time_1 = 0
 
 with col2:
     supplier_2 = st.selectbox("Pilih Supplier 2", supplier_options)
     supplier_2_percentage = st.slider("Persentase Supplier 2", 0, 100, 40)
     location_2 = st.radio("Lokasi Pengambilan Supplier 2", ["Tongkang", "Coalyard"], index=0)
-    storage_time_2 = st.number_input("Lama Penyimpanan di Coalyard (bulan)", min_value=0, max_value=12, value=0) if location_2 == "Coalyard" else 0
+    if location_2 == "Coalyard":
+        storage_time_2 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 2", min_value=0, max_value=12, value=0)
+    else:
+        storage_time_2 = 0
 
 biomass_percentage = st.slider("Persentase Biomass", 0, 100, 20)
 
