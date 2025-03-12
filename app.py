@@ -58,6 +58,11 @@ for label in ["GCV ARB UNLOADING", "TM ARB UNLOADING", "Ash Content ARB UNLOADIN
         val_2 = st.number_input(f"{label} Supplier 2", value=0.0)
     data_input.append((val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / max(supplier_1_percentage + supplier_2_percentage, 1))
 
+# Pastikan data_input memiliki jumlah fitur yang sesuai
+if len(data_input) != imputer.n_features_in_:
+    st.error("Jumlah fitur input tidak sesuai dengan model. Periksa kembali input Anda.")
+    st.stop()
+
 data_input = np.array(data_input).reshape(1, -1)
 data_input = imputer.transform(data_input)
 data_input = scaler.transform(data_input)
