@@ -120,4 +120,7 @@ with col2:
 
 biomass_percentage = st.slider("Persentase Biomass", 0, 100, 20)
 
+def adjust_gcv_for_storage(gcv, storage_time):
+    return gcv * (1 - 0.05 * storage_time)
+
 ...
