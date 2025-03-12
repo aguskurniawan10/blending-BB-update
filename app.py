@@ -103,6 +103,17 @@ st.set_page_config(page_title="Prediksi GCV", layout="wide")
 st.title("🔍 Prediksi GCV (ARB) LAB")
 st.markdown(f"**🧠 Model Terbaik:** {best_model_info['name']} (R² = {best_model_info['r2']:.4f})")
 
+supplier_1 = st.selectbox("Pilih Supplier 1", ["ADARO MRC", "BGG"])
+supplier_2 = st.selectbox("Pilih Supplier 2", ["ADARO MRC", "BGG"])
+location_1 = st.selectbox("Lokasi Pengambilan Supplier 1", ["Tongkang", "Coalyard"])
+location_2 = st.selectbox("Lokasi Pengambilan Supplier 2", ["Tongkang", "Coalyard"])
+storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 1", min_value=0, max_value=12, value=0)
+storage_time_2 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 2", min_value=0, max_value=12, value=0)
+
+supplier_1_percentage = st.slider("Persentase Supplier 1", 0, 100, 50)
+supplier_2_percentage = st.slider("Persentase Supplier 2", 0, 100, 50)
+biomass_percentage = st.slider("Persentase Biomass", 0, 100, 0)
+
 data_input = []
 st.subheader("Masukkan Nilai Parameter untuk Masing-Masing Sumber")
 for label in ["GCV ARB UNLOADING", "TM ARB UNLOADING", "Ash Content ARB UNLOADING", "Total Sulphur ARB UNLOADING"]:
@@ -125,7 +136,6 @@ if st.button("Prediksi GCV"):
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
     final_prediction = (prediction[0] * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / total_percentage
     
-    # Reduksi nilai kalor jika penyimpanan di Coalyard
     if location_1 == "Coalyard":
         final_prediction *= (1 - 0.05 * storage_time_1)
     if location_2 == "Coalyard":
