@@ -5,7 +5,6 @@ import os
 import pickle
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Ridge
 from sklearn.metrics import r2_score
 
@@ -41,8 +40,8 @@ supplier_1 = st.selectbox("Pilih Supplier 1", supplier_list)
 supplier_2 = st.selectbox("Pilih Supplier 2", supplier_list)
 location_1 = st.selectbox("Lokasi Pengambilan Supplier 1", ["Tongkang", "Coalyard"])
 location_2 = st.selectbox("Lokasi Pengambilan Supplier 2", ["Tongkang", "Coalyard"])
-storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 1", min_value=0, max_value=12, value=0)
-storage_time_2 = st.number_input("Lama Penyimpanan di Coalyard (bulan) - Supplier 2", min_value=0, max_value=12, value=0)
+storage_time_1 = st.number_input("Lama Penyimpanan di Coalyard (hari) - Supplier 1", min_value=0, max_value=365, value=0)
+storage_time_2 = st.number_input("Lama Penyimpanan di Coalyard (hari) - Supplier 2", min_value=0, max_value=365, value=0)
 
 supplier_1_percentage = st.slider("Persentase Supplier 1", 0, 100, 50)
 supplier_2_percentage = st.slider("Persentase Supplier 2", 0, 100, 50)
@@ -84,14 +83,16 @@ if st.button("Prediksi GCV"):
     prediction = best_model.predict(data_input)[0]
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
     
+    # Calculate the blended prediction
     if biomass_percentage > 0:
         final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage) + gcv_biomass * biomass_percentage) / max(total_percentage, 1)
     else:
         final_prediction = prediction
     
+    # Apply storage time effect
     if location_1 == "Coalyard" and storage_time_1 > 0:
-        final_prediction *= (1 - 0.05 * storage_time_1)
+        final_prediction *= (1 - 0.05 * (storage_time_1 / 30))  # Convert days to months
     if location_2 == "Coalyard" and storage_time_2 > 0:
-        final_prediction *= (1 - 0.05 * storage_time_2)
+        final_prediction *= (1 - 0.05 * (storage_time_2 / 30))  # Convert days to months
     
     st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f}")
