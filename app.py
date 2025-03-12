@@ -107,7 +107,7 @@ with tab1:
         supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 50, step=10, key="perc2")
     
     with col3:
-        biomass_percentage = st.slider("Persentase Biomass", 0, 100, 0, step=10, key="biomass")
+        biomass_percentage = st.slider("Persentase Biomass", 0, 100, 0, step=1, key="biomass")
     
     # Check if percentages add up to 100
     total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
