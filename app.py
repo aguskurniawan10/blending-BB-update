@@ -308,11 +308,11 @@ with tab1:
                 
             # Apply storage time effects
             if location_1 == "Coalyard" and storage_time_1 > 0:
-                decay_factor_1 = 0.05 * (storage_time_1 / 30))  # Cap at 5% max decrease per supplier
+                decay_factor_1 = 0.05 * (storage_time_1 / 30)  # Cap at 5% max decrease per supplier
                 final_prediction *= (1 - (decay_factor_1 * supplier_1_percentage / 100))
                 
             if location_2 == "Coalyard" and storage_time_2 > 0:
-                decay_factor_2 = 0.05 * (storage_time_2 / 30))  # Cap at 5% max decrease per supplier
+                decay_factor_2 = 0.05 * (storage_time_2 / 30)  # Cap at 5% max decrease per supplier
                 final_prediction *= (1 - (decay_factor_2 * supplier_2_percentage / 100))
                 
             # Ensure result is within reasonable bounds
