@@ -39,9 +39,16 @@ def load_models():
     
     model_components = {}
     try:
-        for name, path in required_files.items():
-            with open(path, "rb") as file:
-                model_components[name.lower().replace(" ", "_")] = pickle.load(file)
+        with open(MODEL_PATH, "rb") as file:
+            model_components["best_model"] = pickle.load(file)
+        with open(IMPUTER_PATH, "rb") as file:
+            model_components["imputer"] = pickle.load(file)
+        with open(SCALER_PATH, "rb") as file:
+            model_components["scaler"] = pickle.load(file)
+        with open(ENCODER_PATH, "rb") as file:
+            model_components["label_encoder"] = pickle.load(file)
+        with open(BEST_MODEL_INFO_PATH, "rb") as file:
+            model_components["best_model_info"] = pickle.load(file)
         return model_components
     except Exception as e:
         st.error(f"Error loading model components: {str(e)}")
@@ -49,11 +56,11 @@ def load_models():
 
 # Load models
 models = load_models()
-best_model = models["model"]
+best_model = models["best_model"]
 imputer = models["imputer"]
 scaler = models["scaler"]
 label_encoder = models["label_encoder"]
-best_model_info = models["model_info"]
+best_model_info = models["best_model_info"]
 
 # Get expected features count
 expected_features = imputer.n_features_in_
@@ -358,4 +365,4 @@ with tab2:
 
 # Add footer
 st.markdown("---")
-st.markdown("© 2025 GCV Prediction Tool | Untuk hasil optimal, pastikan model diperbarui secara teratur dengan data baru.")
+st.markdown("© 2025 GCV Prediction Tool | For optimal results, ensure model is regularly updated with new data.")
