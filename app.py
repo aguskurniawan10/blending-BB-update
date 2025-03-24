@@ -17,6 +17,15 @@ SCALER_DIR = "scalers"
 ENCODER_DIR = "encoders"
 MODEL_INFO_DIR = "model_infos"
 
+# Function to check if directories exist
+def check_directories():
+    directories = [MODEL_DIR, IMPUTER_DIR, SCALER_DIR, ENCODER_DIR, MODEL_INFO_DIR]
+    missing_dirs = [d for d in directories if not os.path.exists(d)]
+    if missing_dirs:
+        st.error(f"Direktori berikut tidak ditemukan: {', '.join(missing_dirs)}")
+        st.info("Pastikan semua direktori berisi file-file yang diperlukan.")
+        st.stop()
+
 # Function to load models with proper error handling
 def load_models():
     model_files = os.listdir(MODEL_DIR)
@@ -67,6 +76,9 @@ def load_models():
         st.stop()
     
     return models
+
+# Check if directories exist
+check_directories()
 
 # Load models
 models = load_models()
