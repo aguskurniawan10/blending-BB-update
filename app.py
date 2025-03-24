@@ -11,63 +11,83 @@ st.set_page_config(page_title="Prediksi GCV", layout="wide")
 st.title("🔍 Prediksi GCV (ARB) LAB")
 
 # Path untuk model dan preprocessing tools
-MODEL_PATH = "best_model.pkl"
-IMPUTER_PATH = "imputer.pkl"
-SCALER_PATH = "scaler.pkl"
-ENCODER_PATH = "label_encoder.pkl"
-BEST_MODEL_INFO_PATH = "best_model_info.pkl"
+MODEL_DIR = "models"
+IMPUTER_DIR = "imputers"
+SCALER_DIR = "scalers"
+ENCODER_DIR = "encoders"
+MODEL_INFO_DIR = "model_infos"
 
 # Function to load models with proper error handling
 def load_models():
-    required_files = {
-        "Model": MODEL_PATH,
-        "Imputer": IMPUTER_PATH,
-        "Scaler": SCALER_PATH,
-        "Label Encoder": ENCODER_PATH,
-        "Model Info": BEST_MODEL_INFO_PATH
-    }
+    model_files = os.listdir(MODEL_DIR)
+    imputer_files = os.listdir(IMPUTER_DIR)
+    scaler_files = os.listdir(SCALER_DIR)
+    encoder_files = os.listdir(ENCODER_DIR)
+    model_info_files = os.listdir(MODEL_INFO_DIR)
     
-    missing_files = []
-    for name, path in required_files.items():
-        if not os.path.exists(path):
-            missing_files.append(name)
-    
-    if missing_files:
-        st.error(f"File-file berikut tidak ditemukan: {', '.join(missing_files)}")
-        st.info("Pastikan semua file model dan preprocessing tersedia di direktori yang sama dengan aplikasi.")
+    if not model_files or not imputer_files or not scaler_files or not encoder_files or not model_info_files:
+        st.error("Direktori model, imputer, scaler, encoder, atau model info kosong.")
+        st.info("Pastikan semua direktori berisi file-file yang diperlukan.")
         st.stop()
     
-    model_components = {}
-    try:
-        with open(MODEL_PATH, "rb") as file:
-            model_components["best_model"] = pickle.load(file)
-        with open(IMPUTER_PATH, "rb") as file:
-            model_components["imputer"] = pickle.load(file)
-        with open(SCALER_PATH, "rb") as file:
-            model_components["scaler"] = pickle.load(file)
-        with open(ENCODER_PATH, "rb") as file:
-            model_components["label_encoder"] = pickle.load(file)
-        with open(BEST_MODEL_INFO_PATH, "rb") as file:
-            model_components["best_model_info"] = pickle.load(file)
-        return model_components
-    except Exception as e:
-        st.error(f"Error loading model components: {str(e)}")
+    models = {}
+    for model_file in model_files:
+        model_name = os.path.splitext(model_file)[0]
+        if (f"{model_name}.pkl" in imputer_files and
+            f"{model_name}.pkl" in scaler_files and
+            f"{model_name}.pkl" in encoder_files and
+            f"{model_name}.pkl" in model_info_files):
+            try:
+                with open(os.path.join(MODEL_DIR, model_file), "rb") as file:
+                    model = pickle.load(file)
+                with open(os.path.join(IMPUTER_DIR, f"{model_name}.pkl"), "rb") as file:
+                    imputer = pickle.load(file)
+                with open(os.path.join(SCALER_DIR, f"{model_name}.pkl"), "rb") as file:
+                    scaler = pickle.load(file)
+                with open(os.path.join(ENCODER_DIR, f"{model_name}.pkl"), "rb") as file:
+                    label_encoder = pickle.load(file)
+                with open(os.path.join(MODEL_INFO_DIR, f"{model_name}.pkl"), "rb") as file:
+                    model_info = pickle.load(file)
+                
+                models[model_name] = {
+                    "model": model,
+                    "imputer": imputer,
+                    "scaler": scaler,
+                    "label_encoder": label_encoder,
+                    "model_info": model_info
+                }
+            except Exception as e:
+                st.error(f"Error loading model components for {model_name}: {str(e)}")
+                st.stop()
+        else:
+            st.warning(f"Komponen model {model_name} tidak lengkap. Mengabaikan model ini.")
+    
+    if not models:
+        st.error("Tidak ada model yang dapat dimuat.")
         st.stop()
+    
+    return models
 
 # Load models
 models = load_models()
-best_model = models["best_model"]
-imputer = models["imputer"]
-scaler = models["scaler"]
-label_encoder = models["label_encoder"]
-best_model_info = models["best_model_info"]
+model_names = list(models.keys())
+
+# User selects the model
+selected_model_name = st.sidebar.selectbox("Pilih Model", model_names)
+
+# Load selected model and its components
+selected_model = models[selected_model_name]["model"]
+selected_imputer = models[selected_model_name]["imputer"]
+selected_scaler = models[selected_model_name]["scaler"]
+selected_label_encoder = models[selected_model_name]["label_encoder"]
+selected_model_info = models[selected_model_name]["model_info"]
 
 # Get expected features count
-expected_features = imputer.n_features_in_
+expected_features = selected_imputer.n_features_in_
 st.sidebar.info(f"Model expects {expected_features} features")
 
 # Display model info
-st.markdown(f"**🧠 Model Terbaik:** {best_model_info['name']} (R² = {best_model_info['r2']:.4f})")
+st.markdown(f"**🧠 Model Terbaik:** {selected_model_info['name']} (R² = {selected_model_info['r2']:.4f})")
 
 # Create tabs for different functionalities
 tab1, tab2 = st.tabs(["Prediksi Standar", "Debugging Info"])
@@ -79,7 +99,7 @@ with tab1:
     
     with col1:
         st.markdown("### Supplier 1")
-        supplier_list = label_encoder.classes_.tolist()
+        supplier_list = selected_label_encoder.classes_.tolist()
         supplier_1 = st.selectbox("Pilih Supplier 1", supplier_list, key="supplier1")
         location_1 = st.selectbox("Lokasi Pengambilan", ["Tongkang", "Coalyard"], key="loc1")
         if location_1 == "Coalyard":
@@ -172,9 +192,9 @@ with tab1:
             st.subheader("Model Structure Analysis")
             st.write(f"Expected features count: {expected_features}")
             
-            if hasattr(best_model, 'feature_names_in_'):
+            if hasattr(selected_model, 'feature_names_in_'):
                 st.write("Feature names in model:")
-                st.write(best_model.feature_names_in_)
+                st.write(selected_model.feature_names_in_)
         
         # Prepare input data based on model expectations
         blended_data = []
@@ -183,7 +203,7 @@ with tab1:
         # Here we're assuming the model expects only one supplier encoding + 4 parameters
         if expected_features == 5:
             # Use only the first supplier encoding
-            supplier_encoded = label_encoder.transform([supplier_1])[0]
+            supplier_encoded = selected_label_encoder.transform([supplier_1])[0]
             blended_data.append(supplier_encoded)
             
             # Calculate blended values for each parameter
@@ -201,8 +221,8 @@ with tab1:
         
         elif expected_features == 6:
             # Use both supplier encodings
-            supplier_encoded_1 = label_encoder.transform([supplier_1])[0]
-            supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
+            supplier_encoded_1 = selected_label_encoder.transform([supplier_1])[0]
+            supplier_encoded_2 = selected_label_encoder.transform([supplier_2])[0]
             blended_data.append(supplier_encoded_1)
             blended_data.append(supplier_encoded_2)
             
@@ -222,7 +242,7 @@ with tab1:
         else:
             # For other cases, try to adapt based on expected_features count
             # This is a simplified approach - you may need to adjust for your specific model
-            supplier_encoded = label_encoder.transform([supplier_1])[0]
+            supplier_encoded = selected_label_encoder.transform([supplier_1])[0]
             blended_data.append(supplier_encoded)
             
             # Add just enough parameters to match expected_features
@@ -267,30 +287,30 @@ with tab1:
             st.write(pd.DataFrame([blended_data], columns=[f"Feature {i}" for i in range(len(blended_data))]))
         
         # Apply imputation
-        imputed_array = imputer.transform(input_array)
+        imputed_array = selected_imputer.transform(input_array)
         with tab2:
             st.subheader("Data Setelah Imputasi")
             st.write(pd.DataFrame(imputed_array, columns=[f"Feature {i}" for i in range(imputed_array.shape[1])]))
         
         # Apply scaling
-        scaled_array = scaler.transform(imputed_array)
+        scaled_array = selected_scaler.transform(imputed_array)
         with tab2:
             st.subheader("Data Setelah Scaling")
             st.write(pd.DataFrame(scaled_array, columns=[f"Feature {i}" for i in range(scaled_array.shape[1])]))
         
         # Make prediction
         try:
-            prediction = best_model.predict(scaled_array)[0]
+            prediction = selected_model.predict(scaled_array)[0]
             
             with tab2:
                 st.subheader("Hasil Prediksi Model")
                 st.write(f"Prediksi Awal: {prediction}")
                 
                 # If model has feature importances, show them
-                if hasattr(best_model, 'feature_importances_'):
+                if hasattr(selected_model, 'feature_importances_'):
                     st.subheader("Feature Importances")
-                    importances = dict(zip([f"Feature {i}" for i in range(len(best_model.feature_importances_))], 
-                                         best_model.feature_importances_))
+                    importances = dict(zip([f"Feature {i}" for i in range(len(selected_model.feature_importances_))], 
+                                         selected_model.feature_importances_))
                     st.write(pd.DataFrame([importances]))
             
             # Perform sanity check on the prediction
@@ -352,16 +372,16 @@ with tab2:
         
         # Show model info
         st.subheader("Informasi Model")
-        if hasattr(best_model, 'feature_names_in_'):
+        if hasattr(selected_model, 'feature_names_in_'):
             st.write("Feature names expected by model:")
-            st.write(best_model.feature_names_in_)
+            st.write(selected_model.feature_names_in_)
         
-        st.write(f"Expected number of features: {imputer.n_features_in_}")
-        st.write(f"Model type: {type(best_model).__name__}")
+        st.write(f"Expected number of features: {selected_imputer.n_features_in_}")
+        st.write(f"Model type: {type(selected_model).__name__}")
         
         # Show label encoder info
         st.subheader("Label Encoder Classes")
-        st.write(pd.DataFrame({"Supplier": label_encoder.classes_, "Encoded Value": range(len(label_encoder.classes_))}))
+        st.write(pd.DataFrame({"Supplier": selected_label_encoder.classes_, "Encoded Value": range(len(selected_label_encoder.classes_))}))
 
 # Add footer
 st.markdown("---")
