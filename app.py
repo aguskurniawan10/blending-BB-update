@@ -242,149 +242,152 @@ with tab1:
     total_percentage = supplier_1_percentage + supplier_2_percentage + supplier_3_percentage + biomass_percentage
     if total_percentage != 100:
         st.warning(f"Total persentase saat ini: {total_percentage}%. Idealnya, total persentase adalah 100%.")
+    
+    # Parameters input section
+    st.subheader("Parameter Batubara")
+    
+    # Define parameters
+    parameters = [
+        "GCV ARB UNLOADING", 
+        "TM ARB UNLOADING", 
+        "Ash Content ARB UNLOADING", 
+        "Total Sulphur ARB UNLOADING"
+    ]
+    
+    # Sample ranges for each parameter to guide users
+    param_ranges = {
+        "GCV ARB UNLOADING": (3500, 5500),
+        "TM ARB UNLOADING": (20, 40),
+        "Ash Content ARB UNLOADING": (2, 10),
+        "Total Sulphur ARB UNLOADING": (0.1, 1.0)
+    }
+    
+    param_values = {}
+    
+    # Create columns and inputs for each parameter
+    for param in parameters:
+        col1, col2, col3 = st.columns(3)  # Adjusted to 3 columns
+        
+        # Ensure min_val and max_val are correctly assigned from param_ranges
+        min_val, max_val = param_ranges.get(param, (0.0, 100.0))
+        
+        with col1:
+            param_values[f"{param}_1"] = st.number_input(
+                f"{param} - {supplier_1}", 
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
+                key=f"{param}_1"
+            )
+        
+        with col2:
+            param_values[f"{param}_2"] = st.number_input(
+                f"{param} - {supplier_2}", 
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
+                key=f"{param}_2"
+            )
+        
+        with col3:
+            param_values[f"{param}_3"] = st.number_input(
+                f"{param} - {supplier_3}", 
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
+                key=f"{param}_3"
+            )
+    
+    # Biomass GCV input if biomass percentage > 0
+    if biomass_percentage > 0:
+        st.subheader("Parameter Biomass")
+        gcv_biomass = st.number_input("GCV Biomass (kcal/kg)", min_value=0.0, max_value=5000.0, value=3000.0)
     else:
-        # Parameters input section
-        st.subheader("Parameter Batubara")
+        gcv_biomass = 0.0
+    
+    # Prepare data for prediction when button is clicked
+    if st.button("Prediksi GCV"):
+        blended_data = []
         
-        # Define parameters
-        parameters = [
-            "GCV ARB UNLOADING", 
-            "TM ARB UNLOADING", 
-            "Ash Content ARB UNLOADING", 
-            "Total Sulphur ARB UNLOADING"
-        ]
+        # Encode suppliers
+        supplier_encoded_1 = label_encoder.transform([supplier_1])[0]
+        supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
+        supplier_encoded_3 = label_encoder.transform([supplier_3])[0]
         
-        # Sample ranges for each parameter to guide users
-        param_ranges = {
-            "GCV ARB UNLOADING": (3500, 5500),
-            "TM ARB UNLOADING": (20, 40),
-            "Ash Content ARB UNLOADING": (2, 10),
-            "Total Sulphur ARB UNLOADING": (0.1, 1.0)
-        }
+        # Calculate blended values for each parameter
+        blended_data.append(supplier_encoded_1)  # First supplier
         
-        param_values = {}
-        
-        # Create columns and inputs for each parameter
         for param in parameters:
-            col1, col2, col3 = st.columns(3)  # Adjusted to 3 columns
+            val_1 = param_values[f"{param}_1"]
+            val_2 = param_values[f"{param}_2"]
+            val_3 = param_values[f"{param}_3"]
             
-            with col1:
-                param_values[f"{param}_1"] = st.number_input(
-                    f"{param} - {supplier_1}", 
-                    min_value=float(0), 
-                    max_value=float(10000),
-                    value=float((min_val + max_val) / 2),
-                    key=f"{param}_1"
-                )
-            
-            with col2:
-                param_values[f"{param}_2"] = st.number_input(
-                    f"{param} - {supplier_2}", 
-                    min_value=float(0), 
-                    max_value=float(10000),
-                    value=float((min_val + max_val) / 2),
-                    key=f"{param}_2"
-                )
-            
-            with col3:
-                param_values[f"{param}_3"] = st.number_input(
-                    f"{param} - {supplier_3}", 
-                    min_value=float(0), 
-                    max_value=float(10000),
-                    value=float((min_val + max_val) / 2),
-                    key=f"{param}_3"
-                )
+            # Calculate weighted average based on percentages
+            if (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage) > 0:
+                blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage + val_3 * supplier_3_percentage) / (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage)
+            else:
+                blended_value = 0
+                
+            blended_data.append(blended_value)
         
-        # Biomass GCV input if biomass percentage > 0
-        if biomass_percentage > 0:
-            st.subheader("Parameter Biomass")
-            gcv_biomass = st.number_input("GCV Biomass (kcal/kg)", min_value=0.0, max_value=5000.0, value=3000.0)
-        else:
-            gcv_biomass = 0.0
+        # Reshape, impute missing values, and scale the data
+        input_array = np.array(blended_data).reshape(1, -1)
         
-        # Prepare data for prediction when button is clicked
-        if st.button("Prediksi GCV"):
-            blended_data = []
+        # Apply imputation
+        imputed_array = imputer.transform(input_array[:, 1:])
+        imputed_data = np.hstack([input_array[:, 0].reshape(-1, 1), imputed_array])
+        
+        # Apply scaling
+        scaled_array = scaler.transform(imputed_data[:, 1:])
+        scaled_data = np.hstack([imputed_data[:, 0].reshape(-1, 1), scaled_array])
+        
+        # Make prediction
+        try:
+            prediction = best_model.predict(scaled_data)[0]
             
-            # Encode suppliers
-            supplier_encoded_1 = label_encoder.transform([supplier_1])[0]
-            supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
-            supplier_encoded_3 = label_encoder.transform([supplier_3])[0]
+            # Perform sanity check on the prediction
+            if prediction < 0 or prediction > 10000:
+                st.error(f"Model mengembalikan nilai prediksi tidak valid: {prediction}")
+                prediction = max(2000, min(prediction, 5500))  # Constrain to reasonable range
+                st.warning(f"Nilai diperbaiki ke dalam rentang yang valid: {prediction}")
             
-            # Calculate blended values for each parameter
-            blended_data.append(supplier_encoded_1)  # First supplier
-            
-            for param in parameters:
-                val_1 = param_values[f"{param}_1"]
-                val_2 = param_values[f"{param}_2"]
-                val_3 = param_values[f"{param}_3"]
+            # Apply biomass blending if applicable
+            if biomass_percentage > 0:
+                final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage) + 
+                                  gcv_biomass * biomass_percentage) / 100
+            else:
+                final_prediction = prediction
                 
-                # Calculate weighted average based on percentages
-                if (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage) > 0:
-                    blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage + val_3 * supplier_3_percentage) / (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage)
-                else:
-                    blended_value = 0
-                    
-                blended_data.append(blended_value)
-            
-            # Reshape, impute missing values, and scale the data
-            input_array = np.array(blended_data).reshape(1, -1)
-            
-            # Apply imputation
-            imputed_array = imputer.transform(input_array[:, 1:])
-            imputed_data = np.hstack([input_array[:, 0].reshape(-1, 1), imputed_array])
-            
-            # Apply scaling
-            scaled_array = scaler.transform(imputed_data[:, 1:])
-            scaled_data = np.hstack([imputed_data[:, 0].reshape(-1, 1), scaled_array])
-            
-            # Make prediction
-            try:
-                prediction = best_model.predict(scaled_data)[0]
+            # Apply storage time effects
+            if location_1 == "Coalyard" and storage_time_1 > 0:
+                decay_factor_1 = 0.05 * (storage_time_1 / 30)  # Cap at 5% max decrease per supplier
+                final_prediction *= (1 - (decay_factor_1 * supplier_1_percentage / 100))
                 
-                # Perform sanity check on the prediction
-                if prediction < 0 or prediction > 10000:
-                    st.error(f"Model mengembalikan nilai prediksi tidak valid: {prediction}")
-                    prediction = max(2000, min(prediction, 5500))  # Constrain to reasonable range
-                    st.warning(f"Nilai diperbaiki ke dalam rentang yang valid: {prediction}")
+            if location_2 == "Coalyard" and storage_time_2 > 0:
+                decay_factor_2 = 0.05 * (storage_time_2 / 30)  # Cap at 5% max decrease per supplier
+                final_prediction *= (1 - (decay_factor_2 * supplier_2_percentage / 100))
                 
-                # Apply biomass blending if applicable
-                if biomass_percentage > 0:
-                    final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage) + 
-                                      gcv_biomass * biomass_percentage) / 100
-                else:
-                    final_prediction = prediction
-                    
-                # Apply storage time effects
-                if location_1 == "Coalyard" and storage_time_1 > 0:
-                    decay_factor_1 = 0.05 * (storage_time_1 / 30)  # Cap at 5% max decrease per supplier
-                    final_prediction *= (1 - (decay_factor_1 * supplier_1_percentage / 100))
-                    
-                if location_2 == "Coalyard" and storage_time_2 > 0:
-                    decay_factor_2 = 0.05 * (storage_time_2 / 30)  # Cap at 5% max decrease per supplier
-                    final_prediction *= (1 - (decay_factor_2 * supplier_2_percentage / 100))
-                    
-                if location_3 == "Coalyard" and storage_time_3 > 0:
-                    decay_factor_3 = 0.05 * (storage_time_3 / 30)  # Cap at 5% max decrease per supplier
-                    final_prediction *= (1 - (decay_factor_3 * supplier_3_percentage / 100))
-                    
-                # Ensure result is within reasonable bounds
-                final_prediction = max(2000, min(final_prediction, 7000))
-                    
-                # Display results
-                st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f} kcal/kg")
+            if location_3 == "Coalyard" and storage_time_3 > 0:
+                decay_factor_3 = 0.05 * (storage_time_3 / 30)  # Cap at 5% max decrease per supplier
+                final_prediction *= (1 - (decay_factor_3 * supplier_3_percentage / 100))
                 
-                # Show additional information
-                st.info("""
-                **Catatan:** 
-                - Berdasarkan Literatur : Degradasi Nilai Kalori dalam 1 Bulan: MRC: 3% hingga 5% (Smith et al., 2023) LRC: 4% (Johnson dan Lee, 2024) Umum: 2% hingga 6% (Coal Research Institute, 2025). 
-                - Penyimpanan di coalyard dapat menurunkan nilai GCV sekitar 5% per bulan.
-                - Hasil prediksi dipengaruhi oleh persentase campuran dan waktu penyimpanan
-                """)
+            # Ensure result is within reasonable bounds
+            final_prediction = max(2000, min(final_prediction, 7000))
                 
-            except Exception as e:
-                st.error(f"Error saat melakukan prediksi: {str(e)}")
-                st.info("Periksa kembali input Anda dan pastikan model sudah dilatih dengan benar.")
+            # Display results
+            st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f} kcal/kg")
+            
+            # Show additional information
+            st.info("""
+            **Catatan:** 
+            - Berdasarkan Literatur : Degradasi Nilai Kalori dalam 1 Bulan: MRC: 3% hingga 5% (Smith et al., 2023) LRC: 4% (Johnson dan Lee, 2024) Umum: 2% hingga 6% (Coal Research Institute, 2025). 
+            - Penyimpanan di coalyard dapat menurunkan nilai GCV sekitar 5% per bulan.
+            - Hasil prediksi dipengaruhi oleh persentase campuran dan waktu penyimpanan
+            """)
+            
+        except Exception as e:
+            st.error(f"Error saat melakukan prediksi: {str(e)}")
+            st.info("Periksa kembali input Anda dan pastikan model sudah dilatih dengan benar.")
 
 with tab2:
     st.subheader("Model Information")
