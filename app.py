@@ -227,13 +227,13 @@ with tab1:
     col1, col2, col3, col4 = st.columns(4)  # Adjusted to 4 columns
     
     with col1:
-        supplier_1_percentage = st.slider(f"Persentase {supplier_1}", 0, 100, 33, step=10, key="perc1")
+        supplier_1_percentage = st.slider(f"Persentase {supplier_1}", 0, 100, 33, step=1, key="perc1")
     
     with col2:
-        supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 33, step=10, key="perc2")
+        supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 33, step=1, key="perc2")
     
     with col3:
-        supplier_3_percentage = st.slider(f"Persentase {supplier_3}", 0, 100, 33, step=10, key="perc3")
+        supplier_3_percentage = st.slider(f"Persentase {supplier_3}", 0, 100, 33, step=1, key="perc3")
     
     with col4:
         biomass_percentage = st.slider("Persentase Biomass", 0, 100, 1, step=1, key="biomass")
@@ -256,9 +256,9 @@ with tab1:
     
     # Sample ranges for each parameter to guide users
     param_ranges = {
-        "GCV ARB UNLOADING": (3500, 5500),
-        "TM ARB UNLOADING": (20, 40),
-        "Ash Content ARB UNLOADING": (2, 10),
+        "GCV ARB UNLOADING": (3500.0, 5500.0),
+        "TM ARB UNLOADING": (20.0, 40.0),
+        "Ash Content ARB UNLOADING": (2.0, 10.0),
         "Total Sulphur ARB UNLOADING": (0.1, 1.0)
     }
     
@@ -269,29 +269,32 @@ with tab1:
         col1, col2, col3 = st.columns(3)  # Adjusted to 3 columns
         
         with col1:
+            min_val, max_val = param_ranges[param]
             param_values[f"{param}_1"] = st.number_input(
                 f"{param} - {supplier_1}", 
-                min_value=param_ranges[param][0], 
-                max_value=param_ranges[param][1],
-                value=(param_ranges[param][0] + param_ranges[param][1]) / 2,
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
                 key=f"{param}_1"
             )
         
         with col2:
+            min_val, max_val = param_ranges[param]
             param_values[f"{param}_2"] = st.number_input(
                 f"{param} - {supplier_2}", 
-                min_value=param_ranges[param][0], 
-                max_value=param_ranges[param][1],
-                value=(param_ranges[param][0] + param_ranges[param][1]) / 2,
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
                 key=f"{param}_2"
             )
         
         with col3:
+            min_val, max_val = param_ranges[param]
             param_values[f"{param}_3"] = st.number_input(
                 f"{param} - {supplier_3}", 
-                min_value=param_ranges[param][0], 
-                max_value=param_ranges[param][1],
-                value=(param_ranges[param][0] + param_ranges[param][1]) / 2,
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
                 key=f"{param}_3"
             )
     
@@ -373,7 +376,7 @@ with tab1:
             
             # Subtract 100 from the final prediction
             final_prediction -= 100
-            
+                
             # Display results
             st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f} kcal/kg")
             
