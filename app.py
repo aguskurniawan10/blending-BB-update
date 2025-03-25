@@ -61,7 +61,7 @@ st.markdown("""
     .stNumberInput > div > div > input,
     .stSelectbox > div > div {
         background-color: rgba(27, 37, 68, 0.7);
-        color: #7ed4ff;
+        color: #e6f1ff;
         border: 2px solid #2c3e70;
         border-radius: 10px;
         backdrop-filter: blur(5px);
@@ -93,7 +93,7 @@ st.markdown("""
     /* Alert and Info Styling */
     .stAlert, .stInfo {
         background-color: rgba(44, 62, 112, 0.7);
-        color: #7ed4ff;
+        color: #e6f1ff;
         border-radius: 15px;
         backdrop-filter: blur(5px);
     }
@@ -110,7 +110,7 @@ st.markdown("""
     /* DataTable Styling */
     .stDataFrame {
         background-color: rgba(27, 37, 68, 0.7);
-        color: #7ed4ff;
+        color: #e6f1ff;
         border-radius: 15px;
         backdrop-filter: blur(5px);
     }
