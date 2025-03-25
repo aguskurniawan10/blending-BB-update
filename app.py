@@ -268,33 +268,30 @@ with tab1:
     for param in parameters:
         col1, col2, col3 = st.columns(3)  # Adjusted to 3 columns
         
-        # Ensure min_val and max_val are correctly assigned from param_ranges
-        min_val, max_val = param_ranges.get(param, (0.0, 100.0))
-        
         with col1:
             param_values[f"{param}_1"] = st.number_input(
                 f"{param} - {supplier_1}", 
-                min_value=float(min_val), 
-                max_value=float(max_val),
-                value=float((min_val + max_val) / 2),
+                min_value=param_ranges[param][0], 
+                max_value=param_ranges[param][1],
+                value=(param_ranges[param][0] + param_ranges[param][1]) / 2,
                 key=f"{param}_1"
             )
         
         with col2:
             param_values[f"{param}_2"] = st.number_input(
                 f"{param} - {supplier_2}", 
-                min_value=float(min_val), 
-                max_value=float(max_val),
-                value=float((min_val + max_val) / 2),
+                min_value=param_ranges[param][0], 
+                max_value=param_ranges[param][1],
+                value=(param_ranges[param][0] + param_ranges[param][1]) / 2,
                 key=f"{param}_2"
             )
         
         with col3:
             param_values[f"{param}_3"] = st.number_input(
                 f"{param} - {supplier_3}", 
-                min_value=float(min_val), 
-                max_value=float(max_val),
-                value=float((min_val + max_val) / 2),
+                min_value=param_ranges[param][0], 
+                max_value=param_ranges[param][1],
+                value=(param_ranges[param][0] + param_ranges[param][1]) / 2,
                 key=f"{param}_3"
             )
     
@@ -373,7 +370,10 @@ with tab1:
                 
             # Ensure result is within reasonable bounds
             final_prediction = max(2000, min(final_prediction, 7000))
-                
+            
+            # Subtract 100 from the final prediction
+            final_prediction -= 100
+            
             # Display results
             st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f} kcal/kg")
             
